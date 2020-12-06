@@ -1,9 +1,7 @@
-#include <map>
 #include <string>
 #include "json.hpp"
 #include <iostream>
 #include <fstream>
-#include <iomanip>
 #include <stack>
 #include <queue>
 
@@ -18,10 +16,27 @@ struct Movie {
     Movie(int val, std::string name, float rating, std::string imgName): val(val), name(name), rating(rating), imgName(imgName) { }
 };
 
+//Comparison operators for building the Trees and Heaps
+struct CompareValue {
+    bool operator()(Movie const& p1, Movie const& p2)
+    {
+        return p1.val < p2.val;
+    }
+};
+
+struct CompareRating {
+    bool operator()(Movie const& p1, Movie const& p2)
+    {
+        return p1.rating < p2.rating;
+    }
+};
+
+
 struct Node{
     Movie obj;
     Node *left;
     Node *right;
+
     Node(Movie newMovie): obj(newMovie), left (nullptr), right(nullptr) {}
 };
 
@@ -34,28 +49,17 @@ public:
     void insertNodeObj(Movie obj);
 };
 
-Node* insertNodeVal(Node* node, Movie newMovie) {
-    if (node == nullptr){
-        node = new Node(newMovie);
-    }
-    else if(node->obj.val < newMovie.val){
-        node->right = insertNodeVal(node->right, newMovie);
-    }
-    else{
-        node->left = insertNodeVal(node->left, newMovie);
-    }
-    return node;
-}
+template<typename T>
+Node* insertNode(Node* node, Movie newMovie, T compare) {
 
-Node* insertNodeRating(Node* node, Movie newMovie) {
     if (node == nullptr){
         node = new Node(newMovie);
     }
-    else if(node->obj.rating < newMovie.rating){
-        node->right = insertNodeRating(node->right, newMovie);
+    else if(compare.operator()(node->obj, newMovie)){
+        node->right = insertNode(node->right, newMovie, compare);
     }
     else{
-        node->left = insertNodeRating(node->left, newMovie);
+        node->left = insertNode(node->left, newMovie, compare);
     }
     return node;
 }
@@ -100,33 +104,16 @@ void BST::outputTree(){ //iterative traversal
 
 void BST::insertNodeObj(Movie obj) {
     if (filter == 3) {
-        root = insertNodeRating(root, obj);
+        CompareRating r1;
+        root = insertNode(root, obj, r1);
     }
     else {
-        root = insertNodeVal(root, obj);
+        CompareValue r1;
+        root = insertNode(root, obj , r1);
     }
 }
 
-//For Priority Queue
-
-struct CompareValue {
-    bool operator()(Movie const& p1, Movie const& p2)
-    {
-        return p1.val < p2.val;
-    }
-};
-
-struct CompareRating {
-    bool operator()(Movie const& p1, Movie const& p2)
-    {
-        return p1.rating < p2.rating;
-    }
-};
-
-
-
-//if single
-//if vector
+//Heaps
 template<typename T>
 void HeapifyObjects(std::vector<Movie> mList, T priorityQueue, int filter){
 
