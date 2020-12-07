@@ -1,0 +1,110 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+html {
+  height: 100%;
+  background-color: lightgray;
+}
+
+#App {
+  display: flex;
+}
+
+#test {
+  flex: 80%;
+}
+#spacer {
+  display: flex;
+  flex: 20%;
+}
+.SearchPanel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 20vw;
+  display: flex;
+  flex: 20%;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background-color: lightblue;
+}
+
+.other {
+  display: flex;
+  flex: 20%;
+}
+
+.rating {
+  font-size: 20pt;
+  height: 140px;
+  margin-left: 10pt;
+  align-items: center;
+}
+
+.SearchPanel form {
+  
+  text-align: center;
+}
+
+.OptionList {
+  padding: 3pt;
+  text-align: center;
+}
+
+.OptionList text {
+  font-weight: bolder;
+}
+
+.OptionList div {
+  padding: 2pt;
+}
+
+.ListItem {
+  display: flex;
+  padding: 1pt;
+  margin: 3pt;
+  border: 3px teal solid;
+  background-color: white;
+}
+
+.SearchPanel img {
+  width: 15vw;
+  margin-bottom: 15vh;
+}
+
+.ListItem:hover {
+  background-color: whitesmoke;
+  cursor: pointer;
+}
+
+.ListItem img{
+  height: 200px;
+}
+
+.ListItem div {
+  display:flex;
+  width: 20vu;
+}
+
+
+img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.ListItemTitle {
+  flex: 10%;
+  padding: 6pt;
+}
