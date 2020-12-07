@@ -13,10 +13,10 @@ class ListItem extends React.Component {
         <img alt='' src={this.props.imageUrl} />
         <div>
           <div class='ListItemTitle'>
-            
-    <p><strong>{this.props.title}</strong><br></br>{this.props.desc}</p>
+
+            <p><strong>{this.props.title}</strong><br></br>{this.props.desc}</p>
           </div>
-    <div class='ListItemTitle'><p><div class='rating'>{this.props.rating}</div></p></div>
+          <div class='ListItemTitle'><p><div class='rating'>{this.props.rating}</div></p></div>
           <div class='other'></div>
         </div>
       </div>
@@ -46,6 +46,12 @@ class TextBox extends React.Component {
   }
 }
 
+async function getMovie(id, apiKey) {
+  let movie;
+  await fetch("https://api.themoviedb.org/3/movie/" + id + "?api_key=" + apiKey).then(response => response.json()).then(data => movie = data);
+  return movie;
+}
+
 class SearchPanel extends React.Component {
   constructor(props) {
     super(props);
@@ -67,12 +73,53 @@ class SearchPanel extends React.Component {
     else if (this.state.opts2.includes(event.target.id))
       this.setState({ sel2: event.target.id })
     else
-      this.setState({sortType: event.target.id});
+      this.setState({ sortType: event.target.id });
   }
 
-  handeSubmit(event) {
+
+  async handeSubmit(event) {
     event.preventDefault();
-    alert("Query: " + this.state.query + "; Type: " + this.state.sel1 + "; Filter: " + this.state.sel2);
+    const apiKey = "879743dbc28d0f7ee9a56559198a3c57";
+    let URL = "https://api.themoviedb.org/3/search/"
+    let movies;
+    // Handle movies
+    if (this.state.sel1 === 'Movie') {
+      URL += "movie?api_key=" + apiKey + "&query=" + this.state.query + "&include_adult=true";
+      console.log(URL);
+      let movieIDs = [];
+      fetch(URL).then(response => response.json()).then(function (data) {
+
+        data['results'].forEach(movie => {
+          movieIDs.push(movie['id']);
+        });
+
+        movies = movieIDs.map((id) => getMovie(id, apiKey));
+
+        Promise.all(movies).then(function (values) {
+          let out = JSON.stringify(values);
+          fetch('http://rmuscapi:8080/', {
+            method: "POST",
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(values)
+          }).then((response) => console.log(response.status));
+          //fetch('http://rmuscapi:8080').then((response) => console.log(response));
+        });
+
+      });
+
+      const params = {
+        query: this.state.query,
+        type: this.state.sel1,
+        filter: this.state.sel2,
+        dataStructure: this.state.sortType
+      };
+
+      //fetch('http://rmuscapi:8080',)
+
+    }
 
   }
 
@@ -80,7 +127,7 @@ class SearchPanel extends React.Component {
     return (
       <div className="SearchPanel" class='SearchPanel'>
         <form onSubmit={this.handeSubmit}>
-        <img alt='logo' src='Logo.png' />
+          <img alt='logo' src='Logo.png' />
           <TextBox id='test' value={this.state.query} onChange={this.handleTextBoxChange} />
           <div id='optionsbox'>
             <OptionList id='Search Type' options={this.state.opts} selected={this.state.sel1} handleRadioChange={this.handleRadioChange} />
@@ -99,10 +146,10 @@ function App(props) {
     <div id="App">
       <div class='SearchPanel'><SearchPanel /></div>
       <div id='spacer'></div>
-      <div id='test'><ListItem rating='83%' imageUrl="https://image.tmdb.org/t/p/w300_and_h450_bestv2/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" dbID='157336' type='movie' title='Interstellar' desc='The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.' />
-      <ListItem imageUrl="https://image.tmdb.org/t/p/w1280/sOxr33wnRuKazR9ClHek73T8qnK.jpg" dbID='106646' title='The Wolf of Wall Street' type='movie' desc="A New York stockbroker refuses to cooperate in a large securities fraud case involving corruption on Wall Street, corporate banking world and mob infiltration. Based on Jordan Belfort's autobiography."/>
-      <ListItem imageUrl="https://image.tmdb.org/t/p/w1280/gThaIXgpCm3PCiXwFNDBJCme85y.jpg" title='Tom Cruise' desc='American actor. sdlhfslkdhflksdhflkadshflkdsahflkh' type='person' dbID='500'/>
-      <ListItem imageUrl="https://image.tmdb.org/t/p/w1280/gThaIXgpCm3PCiXwFNDBJCme85y.jpg" title='Tim Cruise' desc='American actor. sdlhfslkdhflksdhflkadshflkdsahflkh'/>
+      <div id='test'><ListItem rating='83%' imageUrl="https://image.tmdb.org/t/p/original/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" dbID='157336' type='movie' title='Interstellar' desc='The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.' />
+        <ListItem imageUrl="https://image.tmdb.org/t/p/w1280/sOxr33wnRuKazR9ClHek73T8qnK.jpg" dbID='106646' title='The Wolf of Wall Street' type='movie' desc="A New York stockbroker refuses to cooperate in a large securities fraud case involving corruption on Wall Street, corporate banking world and mob infiltration. Based on Jordan Belfort's autobiography." />
+        <ListItem imageUrl="https://image.tmdb.org/t/p/w1280/gThaIXgpCm3PCiXwFNDBJCme85y.jpg" title='Tom Cruise' desc='American actor. sdlhfslkdhflksdhflkadshflkdsahflkh' type='person' dbID='500' />
+        <ListItem imageUrl="https://image.tmdb.org/t/p/w1280/gThaIXgpCm3PCiXwFNDBJCme85y.jpg" title='Tim Cruise' desc='American actor. sdlhfslkdhflksdhflkadshflkdsahflkh' />
       </div>
     </div>
   );
