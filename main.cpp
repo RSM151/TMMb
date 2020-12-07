@@ -78,9 +78,8 @@ public:
 };
 
 template <typename T>
-Node *insertNode(Node *node, Movie newMovie, T compare)
+Node *insertNode(Node *node, Movie newMovie, T compare) //generic binary search insert with comparison operator
 {
-
     if (node == nullptr)
     {
         node = new Node(newMovie);
@@ -102,12 +101,13 @@ void BST::setFilter(int num)
 }
 
 void BST::outputTree()
-{ //iterative traversal
+{
     std::stack<Node *> stack;
     Node *node = root;
     json jsonObjects = json::array();
     std::ofstream o("moviesOut.json");
-    //iterative traversal so I can fstream the entire object
+
+    //iterative traversal so I can stream all the movieObjects to jsonfile
 
     while (node != nullptr || !stack.empty())
     {
@@ -135,14 +135,14 @@ void BST::outputTree()
         node = node->left;
     }
 
-    o << jsonObjects;
+    o << jsonObjects; //stream out
 
     std::cout << "done" << std::endl;
 }
 
 void BST::insertNodeObj(Movie obj)
 {
-    switch (filter)
+    switch (filter) //determines comparison operator needed
     {
     case 1:
     {
@@ -178,10 +178,10 @@ void HeapifyObjects(std::vector<Movie> mList, T priorityQueue)
 
     std::ofstream o("../moviesOut.json");
 
-    json jsonObjects = json::array();
+    json jsonObjects = json::array(); //create json array for sorted movie objects
 
     for (auto i : mList)
-        priorityQueue.push(i);
+        priorityQueue.push(i); //priority push to sort
 
     while (!priorityQueue.empty())
     {
@@ -198,7 +198,7 @@ void HeapifyObjects(std::vector<Movie> mList, T priorityQueue)
         j["revenue"] = movie.revenue;
         jsonObjects.push_back(j);
     }
-    o << jsonObjects;
+    o << jsonObjects; //stream out
     std::cout << "done" << std::endl;
 }
 
@@ -223,7 +223,7 @@ std::vector<Movie> jsonRead()
 
 void HeapifyController(std::vector<Movie> movieList, int filter)
 {
-    switch (filter)
+    switch (filter) //controls the comparison operator needed for objects
     {
     case 1:
     {
@@ -254,20 +254,20 @@ void HeapifyController(std::vector<Movie> movieList, int filter)
 void BSTController(std::vector<Movie> movieList, int filter)
 {
     BST movieTree;
-    movieTree.setFilter(filter);
+    movieTree.setFilter(filter); //sets filter for BST
     for (unsigned int i = 0; i < movieList.size(); i++)
     {
         movieTree.insertNodeObj(movieList[i]);
     }
-    movieTree.outputTree();
+    movieTree.outputTree(); //outputs back to JSON for sending
 }
 
 int main(int argc, char **argv)
 {
-    int filter = atoi(argv[1]);
+    int filter = atoi(argv[1]); //grabs command line arguments from node
     int dataStructure = atoi(argv[2]);
 
-    std::vector<Movie> movieList = jsonRead();
+    std::vector<Movie> movieList = jsonRead(); //reads the json from the movie list
 
     if (dataStructure == 1)
     {
