@@ -1,22 +1,31 @@
+import { render } from '@testing-library/react';
 import React from 'react';
 import './App.css';
 
 class ListItem extends React.Component {
   constructor(props) {
     super(props);
-
+    let url;
+    if (this.props.imagePath === '') {
+      url = "notfound.png";
+    }
+    else {
+      url = "https://image.tmdb.org/t/p/original" + this.props.imagePath;
+    }
+    let popularity = (parseFloat(this.props.rating) * 10.0).toFixed(0);
+    this.state = { imageUrl: url, popularity: popularity };
   }
 
   render() {
     return (
       <div class='ListItem' onClick={() => window.open('https://www.themoviedb.com/' + this.props.type + '/' + this.props.dbID)}>
-        <img alt='' src={this.props.imageUrl} />
+        <img alt='' src={this.state.imageUrl} />
         <div>
           <div class='ListItemTitle'>
 
             <p><strong>{this.props.title}</strong><br></br>{this.props.desc}</p>
           </div>
-          <div class='ListItemTitle'><p><div class='rating'>{this.props.rating}</div></p></div>
+          <div class='ListItemOther'><p><strong>Rating:</strong><div class='rating'>{this.state.popularity}%</div></p></div>
           <div class='other'></div>
         </div>
       </div>
@@ -46,21 +55,45 @@ class TextBox extends React.Component {
   }
 }
 
-async function getMovie(id, apiKey) {
-  let movie;
-  await fetch("https://api.themoviedb.org/3/movie/" + id + "?api_key=" + apiKey).then(response => response.json()).then(data => movie = data);
-  return movie;
-}
-
 class SearchPanel extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { query: '', sort: ['BST', 'Heap'], sortType: '', opts: ['Movie', 'Person', 'Year', 'Genre'], opts2: ['Popularity', 'Box Office', 'Rating', 'Budget'], sel1: '', sel2: '' };
-    this.setState();
+    this.state = { sort: ['BST', 'Heap'], opts: ['Movie', 'Person', 'Year', 'Genre'], opts2: ['Popularity', 'Box Office', 'Rating', 'Budget'] };
+  }
+
+
+  render() {
+    return (
+      <div className="SearchPanel" class='SearchPanel'>
+        <form onSubmit={this.props.handleSubmit}>
+          <img alt='logo' src='Logo.png' />
+          <TextBox id='test' value={this.props.query} onChange={this.props.handleTextBoxChange} />
+          <div id='optionsbox'>
+            <OptionList id='Search Type' options={this.state.opts} selected={this.props.sel1} handleRadioChange={this.props.handleRadioChange} />
+            <OptionList id='Sort By' options={this.state.opts2} selected={this.props.sel2} handleRadioChange={this.props.handleRadioChange} />
+            <OptionList id='Using' options={this.state.sort} selected={this.props.sortType} handleRadioChange={this.props.handleRadioChange} />
+          </div>
+          <input type="submit" id="SearchButton" value="Search" />
+        </form>
+      </div>
+    );
+  }
+};
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = this.getInitialState();
+
+
 
     this.handleTextBoxChange = this.handleTextBoxChange.bind(this);
     this.handleRadioChange = this.handleRadioChange.bind(this);
-    this.handeSubmit = this.handeSubmit.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  getInitialState() {
+    return { query: '', sortType: '', listObjs: [], sel1: '', sel2: '', sort: ['BST', 'Heap'], opts: ['Movie', 'Person', 'Year', 'Genre'], opts2: ['Popularity', 'Box Office', 'Rating', 'Budget'] };
   }
 
   handleTextBoxChange(event) {
@@ -77,14 +110,38 @@ class SearchPanel extends React.Component {
   }
 
 
-  handeSubmit(event) {
+  handleSubmit(event) {
     event.preventDefault();
 
+    let filter, dataStructure;
+
+    switch (this.state.sel2) {
+      case 'Popularity':
+        filter = 1;
+        break;
+      case 'Box Office':
+        filter = 2;
+        break;
+      case 'Rating':
+        filter = 3;
+        break;
+      case 'Budget':
+        filter = 4;
+        break;
+    }
+
+    switch (this.state.sortType) {
+      case 'BST':
+        dataStructure = 1;
+      default:
+        dataStructure = 2;
+    }
+
     const params = {
-      query: this.state.query,
+      query: this.state.query.trim().replace(' ', '+'),
       type: this.state.sel1,
-      filter: this.state.sel2,
-      dataStructure: this.state.sortType
+      filter: filter,
+      dataStructure: dataStructure
     };
 
     fetch('http://localhost:8080/api', {
@@ -94,41 +151,33 @@ class SearchPanel extends React.Component {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(params)
-    }).then((res) => console.log(res.status));
+    }).then(res => res.json()).then(data => {
+      console.log("Data: ");
+      console.log(data);
+      this.setState({ listObjs: data })
+      console.log(this.state.listObjs);
+    });
 
   }
 
-
   render() {
+    let movies;
+    if (this.state.listObjs) {
+      movies = this.state.listObjs.map((movie) => {
+        return <ListItem type='movie' dbID={movie['id']} budget={movie['budget']} imagePath={movie['image path']} desc={movie['overview']} popularity={movie['popularity']} rating={movie['rating']} revenue={movie['revenue']} title={movie['title']} />
+      });
+    }
     return (
-      <div className="SearchPanel" class='SearchPanel'>
-        <form onSubmit={this.handeSubmit}>
-          <img alt='logo' src='Logo.png' />
-          <TextBox id='test' value={this.state.query} onChange={this.handleTextBoxChange} />
-          <div id='optionsbox'>
-            <OptionList id='Search Type' options={this.state.opts} selected={this.state.sel1} handleRadioChange={this.handleRadioChange} />
-            <OptionList id='Sort By' options={this.state.opts2} selected={this.state.sel2} handleRadioChange={this.handleRadioChange} />
-            <OptionList id='Using' options={this.state.sort} selected={this.state.sortType} handleRadioChange={this.handleRadioChange} />
-          </div>
-          <input type="submit" id="SearchButton" value="Search" />
-        </form>
+      <div id="App">
+        <div class='SearchPanel'><SearchPanel query={this.state.query} sortType={this.state.sortType} sel1={this.state.sel1} sel2={this.state.sel2} handleRadioChange={this.handleRadioChange}
+          handleSubmit={this.handleSubmit} handleTextBoxChange={this.handleTextBoxChange} /></div>
+        <div id='spacer'></div>
+        <div id='test'>
+          {movies}
+        </div>
       </div>
     );
   }
 };
-
-function App(props) {
-  return (
-    <div id="App">
-      <div class='SearchPanel'><SearchPanel /></div>
-      <div id='spacer'></div>
-      <div id='test'><ListItem rating='83%' imageUrl="https://image.tmdb.org/t/p/original/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" dbID='157336' type='movie' title='Interstellar' desc='The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.' />
-        <ListItem imageUrl="https://image.tmdb.org/t/p/w1280/sOxr33wnRuKazR9ClHek73T8qnK.jpg" dbID='106646' title='The Wolf of Wall Street' type='movie' desc="A New York stockbroker refuses to cooperate in a large securities fraud case involving corruption on Wall Street, corporate banking world and mob infiltration. Based on Jordan Belfort's autobiography." />
-        <ListItem imageUrl="https://image.tmdb.org/t/p/w1280/gThaIXgpCm3PCiXwFNDBJCme85y.jpg" title='Tom Cruise' desc='American actor. sdlhfslkdhflksdhflkadshflkdsahflkh' type='person' dbID='500' />
-        <ListItem imageUrl="https://image.tmdb.org/t/p/w1280/gThaIXgpCm3PCiXwFNDBJCme85y.jpg" title='Tim Cruise' desc='American actor. sdlhfslkdhflksdhflkadshflkdsahflkh' />
-      </div>
-    </div>
-  );
-}
 
 export default App;
