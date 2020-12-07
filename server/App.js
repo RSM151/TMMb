@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const cors = require('cors');
 const fetch = require('node-fetch');
+const { exec } = require('child_process');
 app.use(cors());
 app.use(bodyParser.json())
 const port = 8080;
@@ -14,7 +15,7 @@ app.get('/', (req, res) => {
 
 app.post('/', (req, res) => {
     console.log((req.body));
-    fs.writeFile('data.json', JSON.stringify(req.body), (err) => console.log(err));
+    fs.writeFile('../data.json', JSON.stringify(req.body), (err) => console.log(err));
     res.send(200);
 })
 
@@ -24,21 +25,44 @@ async function getMovie(id, apiKey) {
     return movie;
 }
 
-async function handleMovies(movies) {
+async function handleMovies(movies, filter, ds) {
+    let f = new Promise(resolve => {
+        const command = '"./../sort.exe" ' + filter + " " + ds;
+        console.log(command);
+        fs.writeFile('../data.json', JSON.stringify(movies), (err) => {
+            if (err) {
+                console.log(err);
+            }
 
+            exec(command, (err, stdout, stderr) => {
+                if (err) {
+                    console.log(err);
+                }
+                fs.readFile('../moviesOut.json', (err, data) => {
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    resolve(JSON.parse(data));
+                });
+            });
+        });
+    });
+    return f;
 }
 
-app.post('/api', (req, res) => {
+app.get('/api', (req, res) => {
 
-    const query = req.body['query'];
-    const type = req.body['type'];
-    const filter = req.body['filter'];
-    const dataStructure = req.body['dataStructure'];
+    res.set('Content-Type', 'application/json');
+
+    const query = req.query.query;
+    const type = req.query.type;
+    const filter = req.query.filter;
+    const dataStructure = req.query.dataStructure;
 
     const apiKey = "879743dbc28d0f7ee9a56559198a3c57";
-    let URL = "https://api.themoviedb.org/3/"
+    let URL = "https://api.themoviedb.org/3/";
     let movies;
-
 
     // Handle movies
     if (type === 'Movie') {
@@ -54,18 +78,14 @@ app.post('/api', (req, res) => {
             movies = movieIDs.map((id) => getMovie(id, apiKey));
 
             Promise.all(movies).then(function (values) {
-                // let out = JSON.stringify(values);
-                // fetch('http://localhost:8080/', {
-                //     method: "POST",
-                //     mode: 'cors',
-                //     headers: {
-                //         'Content-Type': 'application/json'
-                //     },
-                //     body: JSON.stringify(values)
-                // }).then((response) => console.log(response.status));
-                console.log(values);
-            });
+                handleMovies(values, filter, dataStructure).then((val) => {
+                    console.log(JSON.stringify(val))
+                    res.send(JSON.stringify(val));
+
+                });
+            }).catch((err) => console.log(err));
         });
+
     }
 
 
@@ -101,17 +121,12 @@ app.post('/api', (req, res) => {
                 movies = movieIDs.map((id) => getMovie(id, apiKey));
 
                 Promise.all(movies).then(function (values) {
-                    // let out = JSON.stringify(values);
-                    // fetch('http://localhost:8080/', {
-                    //     method: "POST",
-                    //     mode: 'cors',
-                    //     headers: {
-                    //         'Content-Type': 'application/json'
-                    //     },
-                    //     body: JSON.stringify(values)
-                    // }).then((response) => console.log(response.status));
-                    console.log(values);
-                });
+                    handleMovies(values, filter, dataStructure).then((val) => {
+                        console.log(JSON.stringify(val))
+                        res.send(JSON.stringify(val));
+
+                    });
+                }).catch((err) => console.log(err));
             });
         });
     }
@@ -134,17 +149,12 @@ app.post('/api', (req, res) => {
 
 
             Promise.all(movies).then(function (values) {
-                // let out = JSON.stringify(values);
-                // fetch('http://localhost:8080/', {
-                //     method: "POST",
-                //     mode: 'cors',
-                //     headers: {
-                //         'Content-Type': 'application/json'
-                //     },
-                //     body: JSON.stringify(values)
-                // }).then((response) => console.log(response.status));
-                console.log(values);
-            });
+                handleMovies(values, filter, dataStructure).then((val) => {
+                    console.log(JSON.stringify(val))
+                    res.send(JSON.stringify(val));
+
+                });
+            }).catch((err) => console.log(err));
         });
     }
 
@@ -188,17 +198,12 @@ app.post('/api', (req, res) => {
                 movies = movieIDs.map((id) => getMovie(id, apiKey));
 
                 Promise.all(movies).then(function (values) {
-                    // let out = JSON.stringify(values);
-                    // fetch('http://localhost:8080/', {
-                    //     method: "POST",
-                    //     mode: 'cors',
-                    //     headers: {
-                    //         'Content-Type': 'application/json'
-                    //     },
-                    //     body: JSON.stringify(values)
-                    // }).then((response) => console.log(response.status));
-                    console.log(values);
-                });
+                    handleMovies(values, filter, dataStructure).then((val) => {
+                        console.log(JSON.stringify(val))
+                        res.send(JSON.stringify(val));
+
+                    });
+                }).catch((err) => console.log(err));
             });
         });
     }

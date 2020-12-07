@@ -49,7 +49,7 @@ html {
 .rating {
   font-size: 20pt;
   height: 140px;
-  margin-left: 10pt;
+  
   align-items: center;
 }
 
@@ -77,6 +77,8 @@ html {
   margin: 3pt;
   border: 3px teal solid;
   background-color: white;
+  max-width: 80vw;
+  flex: 80%;
 }
 
 .SearchPanel img {
@@ -96,7 +98,7 @@ html {
 
 .ListItem div {
   display:flex;
-  flex: 20%;
+  
   
   
 }
@@ -108,13 +110,18 @@ img {
 }
 
 .ListItemTitle {
-  flex: 10%;
+  flex: 30%;
+  min-width: 30vw;
   padding: 6pt;
 }
 
 .ListItemOther {
   text-align: center;
-  flex: 10%;
+  align-items: center;
+  height: 100%;
+  display: flex;
+  flex: 5%;
+  min-width: 10vw;
   padding: 6pt;
   margin-left: 6pt;
 }

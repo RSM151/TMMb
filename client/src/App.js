@@ -17,6 +17,17 @@ class ListItem extends React.Component {
   }
 
   render() {
+
+    let url;
+    if (this.props.imagePath === '') {
+      url = "notfound.png";
+    }
+    else {
+      url = "https://image.tmdb.org/t/p/original" + this.props.imagePath;
+    }
+    let popularity = (parseFloat(this.props.rating) * 10.0).toFixed(0);
+    this.state = { imageUrl: url, popularity: popularity };
+
     return (
       <div class='ListItem' onClick={() => window.open('https://www.themoviedb.com/' + this.props.type + '/' + this.props.dbID)}>
         <img alt='' src={this.state.imageUrl} />
@@ -26,7 +37,8 @@ class ListItem extends React.Component {
             <p><strong>{this.props.title}</strong><br></br>{this.props.desc}</p>
           </div>
           <div class='ListItemOther'><p><strong>Rating:</strong><div class='rating'>{this.state.popularity}%</div></p></div>
-          <div class='other'></div>
+          <div class='ListItemOther'><p><strong>Budget:</strong><div class='rating'>${this.props.budget}</div></p></div>
+          <div class='ListItemOther'><p><strong>Revenue:</strong><div class='rating'>${this.props.revenue}</div></p></div>
         </div>
       </div>
     );
@@ -143,15 +155,21 @@ class App extends React.Component {
       filter: filter,
       dataStructure: dataStructure
     };
+    const URL = 'http://localhost:8080/api?query=' + params.query + '&filter=' + params.filter + "&type=" + params.type + "&dataStructure=" + dataStructure;
+    console.log(URL);
 
-    fetch('http://localhost:8080/api', {
-      method: "POST",
+    let before = new Date();
+    fetch(URL, {
+      method: "GET",
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(params)
+      //body: JSON.stringify(params)
     }).then(res => res.json()).then(data => {
+      let now = new Date();
+      let diff = now - before;
+      alert("Search Complete. Took " + diff + "ms");
       console.log("Data: ");
       console.log(data);
       this.setState({ listObjs: data })
