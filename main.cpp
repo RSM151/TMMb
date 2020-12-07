@@ -5,22 +5,29 @@
 #include <stack>
 #include <queue>
 
-using json = nlohmann::ordered_json;
+using json = nlohmann::json;
 
 struct Movie {
-    std::string name;
-    std::string imgName;
-    int val;
-    float rating;
+    //Movie values
+    std::string name; //title
+    std::string imgName; //path for image
+    std::string overview;
+    long id;
 
-    Movie(int val, std::string name, float rating, std::string imgName): val(val), name(name), rating(rating), imgName(imgName) { }
+    //filter values
+    int budget;
+    float rating;
+    long revenue;
+    float popularity;
+
+    Movie(int budget, std::string name, float rating, std::string imgName, std::string overview, long revenue, float popularity, long id): overview(overview), revenue(revenue), popularity(popularity), id(id) , budget(budget), name(name), rating(rating), imgName(imgName) { }
 };
 
 //Comparison operators for building the Trees and Heaps
-struct CompareValue {
+struct CompareBudget {
     bool operator()(Movie const& p1, Movie const& p2)
     {
-        return p1.val < p2.val;
+        return p1.budget < p2.budget;
     }
 };
 
@@ -31,6 +38,19 @@ struct CompareRating {
     }
 };
 
+struct CompareRevenue {
+    bool operator()(Movie const& p1, Movie const& p2)
+    {
+        return p1.revenue < p2.revenue;
+    }
+};
+
+struct ComparePopularity{
+    bool operator()(Movie const& p1, Movie const& p2)
+    {
+        return p1.popularity < p2.popularity;
+    }
+};
 
 struct Node{
     Movie obj;
@@ -55,7 +75,7 @@ Node* insertNode(Node* node, Movie newMovie, T compare) {
     if (node == nullptr){
         node = new Node(newMovie);
     }
-    else if(compare.operator()(node->obj, newMovie)){
+    else if(compare.operator()(node->obj, newMovie)){ //compare depends on the object put in
         node->right = insertNode(node->right, newMovie, compare);
     }
     else{
@@ -86,36 +106,55 @@ void BST::outputTree(){ //iterative traversal
         node = stack.top();
 
         stack.pop();
-        json j;
+        json j; //outputs to stream
+        j["title"] = node->obj.name;
+        j["image path"] = node->obj.imgName;
+        j["budget"] = node->obj.budget;
+        j["rating"] = node->obj.rating;
+        j["overview"] = node->obj.overview;
+        j["id"] = node->obj.id;
+        j["popularity"] = node->obj.popularity;
+        j["revenue"] = node->obj.revenue;
 
-        j["Movie Name"] = node->obj.name;
-        j["Image Path"] = node->obj.imgName;
-        j["Value"] = node->obj.val;
-        j["Rating"] = node->obj.rating;
         jsonObjects.push_back(j);
 
         node = node->left;
     }
 
     o << jsonObjects;
+
     std::cout << "done" << std::endl;
 }
 
 
 void BST::insertNodeObj(Movie obj) {
-    if (filter == 3) {
-        CompareRating r1;
-        root = insertNode(root, obj, r1);
-    }
-    else {
-        CompareValue r1;
-        root = insertNode(root, obj , r1);
+    switch (filter){
+        case 1: {
+            ComparePopularity r1;
+            root = insertNode(root, obj , r1);
+            break;
+        }
+        case 2: {
+            CompareRevenue r1;
+            root = insertNode(root, obj , r1);
+            break;
+        }
+        case 3: {
+            CompareRating r1;
+            root = insertNode(root, obj, r1);
+            break;
+        }
+        default: {
+            CompareBudget r1;
+            root = insertNode(root, obj , r1);
+            break;
+        }
     }
 }
 
 //Heaps
 template<typename T>
-void HeapifyObjects(std::vector<Movie> mList, T priorityQueue, int filter){
+void HeapifyObjects(std::vector<Movie> mList, T priorityQueue){
 
     std::ofstream o("moviesOut.json");
 
@@ -127,11 +166,15 @@ void HeapifyObjects(std::vector<Movie> mList, T priorityQueue, int filter){
     while(!priorityQueue.empty()){
         Movie movie = priorityQueue.top();
         priorityQueue.pop();
-        json j;
-        j["Movie Name"] = movie.name;
-        j["Image Path"] = movie.imgName;
-        j["Value"] = movie.val;
-        j["Rating"] = movie.rating;
+        json j; //outputs to stream
+        j["title"] = movie.name;
+        j["image path"] = movie.imgName;
+        j["budget"] = movie.budget;
+        j["rating"] = movie.rating;
+        j["overview"] = movie.overview;
+        j["id"] = movie.id;
+        j["popularity"] = movie.popularity;
+        j["revenue"] = movie.revenue;
         jsonObjects.push_back(j);
 
     }
@@ -139,17 +182,54 @@ void HeapifyObjects(std::vector<Movie> mList, T priorityQueue, int filter){
     std::cout << "done" << std::endl;
 
 }
-//testfunction
-std::vector<Movie> jsonRead(){
+
+std::vector<Movie> jsonRead(){ //reads the Json file
     std::vector<Movie> movieList;
-    std::ifstream i("movies.json");
-    json j = json::parse(i);
+    std::ifstream i("data.json");
+    json j = json::parse(i); //parses through Json
     for (unsigned int i = 0; i < j.size(); i++){
-        Movie mov(j[i].at("Value"),j[i].at("Movie Name"),j[i].at("Rating"), j[i].at("Image Path"));
+        std::string poster_path;
+        if(j[i].at("poster_path") != nullptr){
+            poster_path = j[i].at("poster_path");
+        }
+
+        Movie mov(j[i].at("budget"),j[i].at("title"),j[i].at("vote_average"), poster_path,j[i].at("overview"), j[i].at("revenue"),j[i].at("popularity"), j[i].at("id"));
         movieList.push_back(mov);
     }
-
     return movieList;
+}
+
+void HeapifyController(std::vector<Movie> movieList, int filter){
+    switch (filter){
+        case 1: {
+            std::priority_queue<Movie, std::vector<Movie>, ComparePopularity> pq;
+            HeapifyObjects(movieList, pq);
+            break;
+        }
+        case 2: {
+            std::priority_queue<Movie, std::vector<Movie>, CompareRevenue> pq;
+            HeapifyObjects(movieList, pq);
+            break;
+        }
+        case 3: {
+            std::priority_queue<Movie, std::vector<Movie>, CompareRating> pq;
+            HeapifyObjects(movieList, pq);
+            break;
+        }
+        default: {
+            std::priority_queue<Movie, std::vector<Movie>, CompareBudget> pq;
+            HeapifyObjects(movieList, pq);
+            break;
+        }
+    }
+}
+void BSTController(std::vector<Movie> movieList, int filter){
+    BST movieTree;
+    movieTree.setFilter(filter);
+    for(unsigned int i = 0; i < movieList.size(); i++){
+        movieTree.insertNodeObj(movieList[i]);
+    }
+    movieTree.outputTree();
 }
 
 int main(int argc, char** argv){
@@ -164,21 +244,9 @@ int main(int argc, char** argv){
     std::vector<Movie> movieList = jsonRead();
 
     if (dataStructure == 1) {
-        BST movieTree;
-        movieTree.setFilter(filter);
-        for(unsigned int i = 0; i < movieList.size(); i++){
-            movieTree.insertNodeObj(movieList[i]);
-        }
-        movieTree.outputTree();
+        BSTController(movieList, filter);
     }
     else {
-        if (filter == 3) {
-            std::priority_queue<Movie, std::vector<Movie>, CompareRating> pq;
-            HeapifyObjects(movieList, pq, filter);
-        }
-        else {
-            std::priority_queue<Movie, std::vector<Movie>, CompareValue> pq;
-            HeapifyObjects(movieList, pq, filter);
-        }
+        HeapifyController(movieList, filter);
     }
 }
