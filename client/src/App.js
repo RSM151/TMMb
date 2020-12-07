@@ -77,51 +77,27 @@ class SearchPanel extends React.Component {
   }
 
 
-  async handeSubmit(event) {
+  handeSubmit(event) {
     event.preventDefault();
-    const apiKey = "879743dbc28d0f7ee9a56559198a3c57";
-    let URL = "https://api.themoviedb.org/3/search/"
-    let movies;
-    // Handle movies
-    if (this.state.sel1 === 'Movie') {
-      URL += "movie?api_key=" + apiKey + "&query=" + this.state.query + "&include_adult=true";
-      console.log(URL);
-      let movieIDs = [];
-      fetch(URL).then(response => response.json()).then(function (data) {
 
-        data['results'].forEach(movie => {
-          movieIDs.push(movie['id']);
-        });
+    const params = {
+      query: this.state.query,
+      type: this.state.sel1,
+      filter: this.state.sel2,
+      dataStructure: this.state.sortType
+    };
 
-        movies = movieIDs.map((id) => getMovie(id, apiKey));
-
-        Promise.all(movies).then(function (values) {
-          let out = JSON.stringify(values);
-          fetch('http://rmuscapi:8080/', {
-            method: "POST",
-            mode: 'cors',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(values)
-          }).then((response) => console.log(response.status));
-          //fetch('http://rmuscapi:8080').then((response) => console.log(response));
-        });
-
-      });
-
-      const params = {
-        query: this.state.query,
-        type: this.state.sel1,
-        filter: this.state.sel2,
-        dataStructure: this.state.sortType
-      };
-
-      //fetch('http://rmuscapi:8080',)
-
-    }
+    fetch('http://localhost:8080/api', {
+      method: "POST",
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(params)
+    }).then((res) => console.log(res.status));
 
   }
+
 
   render() {
     return (
