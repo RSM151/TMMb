@@ -233,13 +233,8 @@ void BSTController(std::vector<Movie> movieList, int filter){
 }
 
 int main(int argc, char** argv){
-    //int filter = atoi(argv[1]);
-    //int dataStructure = atoi(argv[2]);
-    int dataStructure;
-    int filter;
-
-    std::cin >> dataStructure;
-    std::cin >> filter;
+    int filter = atoi(argv[1]);
+    int dataStructure = atoi(argv[2]);
 
     std::vector<Movie> movieList = jsonRead();
 
